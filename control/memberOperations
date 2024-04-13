@@ -1,0 +1,247 @@
+import dbOperations.users as users
+import dbOperations.biodata as biodata
+import dbOperations.goals as goals
+import dbOperations.routines as routines
+import dbOperations.enrolments as enrolments
+import datetime
+import dbOperations.sessions as sessions
+import dbOperations.transactions as transactions
+
+def Member(user):
+    while(True):
+        print("----------------------------------------------------------------------------------------")
+        print("Welcome to the member site. Please follow the instructions below to perform actions:\n")
+        print("Please choose which page to go to: (To log out, please enter ctrl+C at any point)")
+        print("-> Profile")
+        print("-> Dashboard")
+        print("-> Sessions")
+        page = input("\nYour choice: ")
+        if page == "Profile":
+            ProfileView(user)
+        elif page == "Dashboard":
+            DashboardView(user)
+        elif page == "Sessions":
+            SessionView(user)
+        else:
+            Member(user)
+
+def ProfileView(user):
+    viewProfile(user)
+    print("-----------")
+    print("To edit your profile, enter 1")
+    print("To add a goal, enter 2")
+    print("To add a health metric, enter 3")
+    print("To go back to the Members page, enter 4")
+    print("------------")
+    choice = input("Your Choice: ")
+    if choice == str(1):
+        editProfile(user)
+    elif choice == str(2):
+        addGoal(user)
+    elif choice == str(3):
+        inputHealthMetrics(user)
+    elif choice == str(4):
+        Member(user)
+    else:
+        ProfileView(user)
+
+def DashboardView(user):
+    print("Dashboard")
+    print("-----------")
+    viewGoals(user)
+    print("\n")
+    viewRoutines(user)
+    print("\n")
+    viewHealthStats(user)
+    print("-----------")
+    print("To set a goal as achieved, enter 1")
+    print("To add a routine, enter 2")
+    print("To add a health metric, enter 3")
+    print("To go back to the Members page, enter 4")
+    print("------------")
+    choice = input("Your Choice: ")
+    if choice == str(1):
+        setGoal(user)
+    elif choice == str(2):
+        addRoutine(user)
+    elif choice == str(3):
+        inputHealthMetrics(user)
+    elif choice == str(4):
+        Member(user)
+    else:
+        DashboardView(user)
+
+def SessionView(user):
+    print("Sessions")
+    print("-----------")
+    mySessions(user)
+    print("-----------")
+    print("To view all available sessions, enter 1")
+    print("To sign up for a session, enter 2")
+    print("To cancel a session, enter 3")
+    print("To change a session, enter 4")
+    print("To go back to the Members page, enter 5")
+    choice = input("Your choice: ")
+    if choice == str(1):
+        viewSessions()
+        SessionView(user)
+    elif choice == str(2):
+        viewSessions()
+        choice = input("Enter session id of session you want to join: ")
+        signUp(user, int(choice))
+    elif choice == str(3):
+        choice = input("Enter session id of session you want to cancel: ")
+        cancel(user, choice)
+    elif choice == str(4):
+        changeSession(user)
+    elif choice == str(5):
+        Member(user)
+    else:
+        SessionView(user)
+    return
+
+def viewProfile(userId):
+    print("Profile: ")
+    profile = users.getUserByID(userId)[0]
+    print("Name: " + profile[1]+" "+profile[2])
+    print("Password: " + profile[3])
+    print("Email: " + profile[4])
+    print("Phone: " + profile[5])
+
+def editProfile(userId):
+    first_name = input("Enter first name: ")
+    last_name = input("Enter last name: ")
+    password = input("Enter password: ")
+    email = input("Enter email: ")
+    phone = input("Enter phone: ")
+    users.updateUser(userId, first_name, last_name, email, password, phone)
+    print("Update successful!")
+
+def viewGoals(userId):
+    allGoals = goals.getGoalsbyUserId(userId)
+    print("GOALS:")
+    for goal in allGoals:
+        goalId = goal[0]
+        goalType = goal[2]
+        goalValue = goal[3]
+        goalResult = goal[4]
+        print("o Goal Id: " + str(goalId) + " Goal Type: "+ goalType + " Metric: " +str(goalValue) + " || Accomplished? " + str(goalResult))
+
+def addGoal(userId):
+    goalType = input("Enter goal type: ")
+    goalValue = input("Enter metric value: ")
+    goals.addGoal(userId, goalType, int(goalValue), False)
+    print("Addition successful!")
+
+def setGoal(userId):
+    goalId = input("Enter goal id to be updated: ")
+    goals.updateGoal(goalId)
+    print("Goal updated")
+
+def inputHealthMetrics(userId):
+    userHeight = input("Enter Height: ")
+    userWeight = input("Enter Weight: ")
+    userRHR = input("Enter Resting Heart Rate: ")
+    biodata.addBioData(userId, int(userHeight), int(userWeight), int(userRHR), datetime.date.today())
+    print("Addition successful!")
+
+def viewHealthStats(userId):
+    print("HEALTH STATISTICS:")
+    bios = biodata.getBioData(userId)
+    if len(bios) > 0:
+        recentBio = bios[len(bios)-1]
+        userHeight = recentBio[2]
+        userWeight = recentBio[3]
+        userRHR = recentBio[4]
+        date = recentBio[5]
+        
+        bmi = userWeight/((userHeight/100)*(userHeight/100))
+        print("Your current Height (cm): " + str(userHeight))
+        print("Your current Weight (kg): " + str(userWeight))
+        print("Your current BMI: " + str(bmi))
+        print("Your current resting heart rate: " + str(userRHR))
+        print("Older biodata includes: ")
+        for bio in bios:
+            userHeight = bio[2]
+            userWeight = bio[3]
+            userRHR = bio[4]
+            date = bio[5]
+            print("o Date: " + str(date) + " || Height: " + str(userHeight) + " || Weight: " + str(userWeight) + " || Resting Heart Rate: " + str(userRHR))
+
+def viewRoutines(userId):
+    print("ROUTINES:")
+    routs = routines.getRoutinesByUser(userId)
+    for rout in routs:
+        name = rout[2]
+        desc = rout[3]
+        print("o Name: " + name + " || Description: " + desc)
+
+def addRoutine(userId):
+    routineName = input("Enter routine name: ")
+    routineDescription = input("Enter routine desription: ")
+    routines.addRoutine(userId, routineName, routineDescription)
+    print("Addition successful!")
+    return
+
+def mySessions(userId):
+    enrols = enrolments.getEnrolmentsByUser(userId)
+    if len(enrols) > 0:
+        for enrol in enrols:
+            session = sessions.getSessionById(enrol[1])[0]
+            sessionId = session[0]
+            sessionTime = session[1]
+            sessionDate = session[2]
+            sessionName = session[3]
+            sessionType = session[5]
+            if sessionType == False:
+                sessionType = "Group"
+            else:
+                sessionType = "Personal"
+            sessionRoom = session[6]
+            print("Session Id: " + str(sessionId) + " || Name: " + sessionName + " || Date and Time: " + str(sessionDate) + " " + str(sessionTime) + " || Session Type: " + sessionType + " || Room: " + str(sessionRoom))
+    return
+
+def viewSessions():
+    allSessions = sessions.getAllSessions()
+    for session in allSessions:
+        sessionId = session[0]
+        sessionTime = session[1]
+        sessionDate = session[2]
+        sessionName = session[3]
+        sessionType = session[5]
+        if sessionType == False:
+            sessionType = "Group"
+        else:
+            sessionType = "Personal"
+        sessionRoom = session[6]
+        print("Session Id: " + str(sessionId) + " || Name: " + sessionName + " || Date and Time: " + str(sessionDate) + " " + str(sessionTime) + " || Session Type: " + sessionType + " || Room: " + str(sessionRoom))
+    return
+
+def signUp(userId, sessionId):
+    session = sessions.getSessionById(sessionId)[0]
+    if session[5] is True:
+        print(enrolments.getEnrolmentsBySession(sessionId))
+        if enrolments.getEnrolmentsBySession(sessionId) is not None:
+            print("Session is not available for booking")
+        else:
+            enrolments.addEnrolment(userId, sessionId)
+            creditCard = input("Enter credit card number: ")
+            transactions.addTransaction(userId, sessionId, creditCard, None, None)
+            print("Session has been signed up for!")
+    else:
+        enrolments.addEnrolment(userId, sessionId)
+        creditCard = input("Enter credit card number: ")
+        transactions.addTransaction(userId, sessionId, creditCard, None, None)
+        print("Session has been signed up for!")
+
+def cancel(userId, sessionId):
+    enrolments.deleteEnrolment(userId, int(sessionId))
+    transactions.deleteTransactionByUser(userId, int(sessionId))
+    return
+
+def changeSession(userId):
+    choice = input("Enter session id of session you want to change from: ")
+    cancel(userId, choice)
+    choice = input("Enter session id of session you want to change to: ")
+    signUp(userId, choice)
+    return
