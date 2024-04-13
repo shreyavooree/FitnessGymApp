@@ -20,13 +20,13 @@ To run:
 
 Extra information:
 - Admin account:
-userId = 7
+userId = 7,
 password = admin
 
 - Trainer account:
-userId = 4
+userId = 4,
 password = password123
 
 - Member account:
-  userId = 1
+  userId = 1,
   password = password123
