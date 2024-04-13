@@ -12,7 +12,7 @@ Preconditions:
 
 To run:
 - Open PgAdmin
-- Make database titled "school"
+- Make database titled "fitnessGym"
 - Use DDL file to make tables using query tool
 - Use DML file to populate tables using query tool
 - Navigate to Project folder in terminal - Run "python main.py"
